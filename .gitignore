@@ -37,7 +37,8 @@ build/
 
 ### Mac OS ###
 .DS_Store
-/docker/
+/docker/mysql/data/
+/docker/tempo/tempo-data/
 /volume-data/
 /data/
 /docker/tempo/tempo-data/
