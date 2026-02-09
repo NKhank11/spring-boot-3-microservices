@@ -57,6 +57,8 @@ docker-compose up -d
   - OrderServiceApplication
   - InventoryServiceApplication
   - NotificationServiceApplication
+  <img width="1071" height="346" alt="image" src="https://github.com/user-attachments/assets/78c1883a-3222-453d-a1bf-39d1f5bf01c7" />
+
 
 **Option B - Using Terminal (run each in separate terminal):**
 ```bash
@@ -91,6 +93,11 @@ npm start
 - **Grafana**: http://localhost:3000
 - **Prometheus**: http://localhost:9090
 - **Kafka UI**: http://localhost:8086
+<img width="1916" height="501" alt="image" src="https://github.com/user-attachments/assets/86e41e8f-3847-4175-8122-3cf46a5058cd" />
+<img width="1031" height="612" alt="image" src="https://github.com/user-attachments/assets/6e8ec79d-f8b0-4433-ba86-f4000e48a332" />
+<img width="1919" height="926" alt="image" src="https://github.com/user-attachments/assets/a98ab5e9-f978-4415-ab92-7de9c748a123" />
+<img width="1919" height="881" alt="image" src="https://github.com/user-attachments/assets/a03a2907-705e-4985-be9e-43300cc16ea3" />
+
 
 ---
 
