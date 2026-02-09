@@ -1,8 +1,9 @@
 import { PassedInitialConfig } from 'angular-auth-oidc-client';
+import { environment } from '../../environments/environment';
 
 export const authConfig: PassedInitialConfig = {
   config: {
-    authority: 'http://keycloak.default.svc.cluster.local:8080/realms/spring-microservices-security-realm',
+    authority: environment.keycloakAuthority,
     redirectUrl: window.location.origin,
     postLogoutRedirectUri: window.location.origin,
     clientId: 'angular-client',

@@ -29,46 +29,138 @@ E-commerce microservices application built with Spring Boot 3, demonstrating mod
 - Java 21
 - Docker & Docker Compose
 - Maven
-- kubectl (for Kubernetes deployment)
+- Node.js & npm (for frontend)
+- kubectl & Kind (for Kubernetes deployment)
 
-### 1. Run with Docker Compose
+---
 
+## 🔵 Option 1: Local Development (Docker Compose)
+
+### Step 1: Build the Backend Services
 ```bash
-# Start infrastructure
-docker-compose up -d
-
-# Build and run services
-./mvnw spring-boot:build-image -DdockerPassword=<your-dockerhub-token>
-
-# Access applications
-# Frontend: http://localhost:4200
-# API Gateway: http://localhost:9000
-# Keycloak: http://localhost:8181 (admin/admin)
-# Grafana: http://localhost:3000
-# Kafka UI: http://localhost:8086
+# Clean and build all services (compile Java classes)
+./mvnw clean install -DskipTests
 ```
 
-### 2. Run on Kubernetes (Kind)
-
+### Step 2: Start Infrastructure with Docker Compose
 ```bash
-# Create Kind cluster
+# Start MySQL, MongoDB, Kafka, Keycloak, Prometheus, Grafana, etc.
+docker-compose up -d
+```
+
+### Step 3: Run Backend Services
+**Option A - Using IntelliJ IDEA:**
+- Open the project in IntelliJ
+- Go to Services panel and run all Spring Boot applications:
+  - ApiGatewayApplication
+  - ProductServiceApplication
+  - OrderServiceApplication
+  - InventoryServiceApplication
+  - NotificationServiceApplication
+
+**Option B - Using Terminal (run each in separate terminal):**
+```bash
+# API Gateway (port 9000)
+cd api-gateway && ../mvnw spring-boot:run
+
+# Product Service (port 8080)
+cd product-service && ../mvnw spring-boot:run
+
+# Order Service (port 8081)
+cd order-service && ../mvnw spring-boot:run
+
+# Inventory Service (port 8082)
+cd inventory-service && ../mvnw spring-boot:run
+
+# Notification Service (port 8083)
+cd notification-service && ../mvnw spring-boot:run
+```
+
+### Step 4: Run Frontend
+```bash
+cd frontend
+npm install
+npm start
+```
+
+### 🌐 Access Applications (Local Docker Compose)
+- **Frontend**: http://localhost:4200
+- **API Gateway**: http://localhost:9000
+- **Swagger UI**: http://localhost:9000/swagger-ui.html
+- **Keycloak**: http://localhost:8181 (admin/admin) ⚠️ Port 8181 for local!
+- **Grafana**: http://localhost:3000
+- **Prometheus**: http://localhost:9090
+- **Kafka UI**: http://localhost:8086
+
+---
+
+## 🟢 Option 2: Kubernetes Deployment (Kind)
+
+### Step 1: Build Docker Images
+```bash
+# Build and push images to Docker Hub
+./mvnw spring-boot:build-image -DdockerPassword=<your-dockerhub-token>
+```
+
+### Step 2: Create Kind Cluster
+```bash
 cd k8s/kind
 ./create-kind-cluster.sh
+```
 
-# Deploy infrastructure
+### Step 3: Deploy Infrastructure
+```bash
+# Deploy MySQL, MongoDB, Kafka, Keycloak, etc.
 kubectl apply -f k8s/manifests/infrastructure/
 
 # Wait for infrastructure to be ready
 kubectl wait --for=condition=ready pod -l app=mysql --timeout=300s
-
-# Deploy applications
-kubectl apply -f k8s/applications/
-
-# Port forward to access services
-kubectl port-forward svc/frontend 4200:80
-kubectl port-forward svc/api-gateway 9000:9000
-kubectl port-forward svc/keycloak 8181:8080
+kubectl wait --for=condition=ready pod -l app=keycloak --timeout=300s
 ```
+
+### Step 4: Deploy Microservices
+```bash
+kubectl apply -f k8s/applications/
+```
+
+### Step 5: Configure Local DNS (Windows)
+Add this line to `C:\Windows\System32\drivers\etc\hosts`:
+```
+127.0.0.1 keycloak.default.svc.cluster.local
+```
+
+### Step 6: Port Forward Services
+```bash
+# Frontend
+kubectl port-forward svc/frontend 4200:80
+
+# API Gateway
+kubectl port-forward svc/api-gateway 9000:9000
+
+# Keycloak
+kubectl port-forward svc/keycloak 8080:8080
+```
+
+### 🌐 Access Applications (Kubernetes)
+- **Frontend**: http://localhost:4200
+- **API Gateway**: http://localhost:9000
+- **Swagger UI**: http://localhost:9000/swagger-ui.html
+- **Keycloak**: http://localhost:8080 (admin/admin) ⚠️ Port 8080 for K8s!
+  - Or: http://keycloak.default.svc.cluster.local:8080
+- **Grafana**: http://localhost:3000 (after port-forward)
+
+---
+
+## 🔄 Key Differences Between Deployments
+
+| Aspect | Local (Docker Compose) | Kubernetes (Kind) |
+|--------|------------------------|-------------------|
+| **Keycloak URL** | `localhost:8181` | `keycloak.default.svc.cluster.local:8080` or `localhost:8080` (port-forward) |
+| **Backend Build** | `mvnw clean install` | `mvnw spring-boot:build-image` |
+| **Backend Run** | IntelliJ or `mvnw spring-boot:run` | Kubernetes pods |
+| **Frontend Build** | `npm start` (development) | Docker image (production) |
+| **DNS Setup** | Not needed | Add `keycloak.default.svc.cluster.local` to hosts file |
+
 
 ## Configuration
 
@@ -126,15 +218,42 @@ Aggregated Swagger UI available at: http://localhost:9000/swagger-ui.html
 
 ## Development
 
-### Build Docker images
+### Build Project Locally (Without Docker)
 ```bash
-./mvnw spring-boot:build-image -DdockerPassword=<token>
+# For running services via IntelliJ or mvnw spring-boot:run
+./mvnw clean install -DskipTests
 ```
 
-### Run individual service
+### Build Docker Images (For Kubernetes deployment)
+```bash
+# Build and push to Docker Hub
+# Note: -DdockerPassword is ONLY required when building Docker images
+./mvnw spring-boot:build-image -DdockerPassword=<your-dockerhub-token>
+```
+
+**📝 Note about `dockerPassword`:**
+- **NOT needed** for local development with `docker-compose up`
+- **ONLY needed** when building and pushing Docker images for Kubernetes
+- The property was removed from `pom.xml` to avoid build errors during local compilation
+- Pass it as a command-line argument when needed: `-DdockerPassword=xxx`
+
+### Run Individual Service Locally
 ```bash
 cd <service-name>
 ../mvnw spring-boot:run
+```
+
+### Run Frontend in Development Mode
+```bash
+cd frontend
+npm install
+npm start  # Uses localhost:8181 for Keycloak
+```
+
+### Build Frontend for Production (Kubernetes)
+```bash
+cd frontend
+npm run build  # Uses keycloak.default.svc.cluster.local:8080
 ```
 
 ### Database Migrations
